@@ -18,5 +18,5 @@ class TestWikipediaNamesSearch(TestCase):
         page = self.sut._WikipediaNamesSearch__load_page("https://en.wikipedia.org/wiki/Special:Search/Log_Horizon")
         pass
 
-    def test_search_episodes_01(self):
-        self.fail()
+    # def test_search_episodes_01(self):
+    #     self.fail()
