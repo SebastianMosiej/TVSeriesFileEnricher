@@ -1,5 +1,5 @@
-import unittest
 import os
+from nose.tools import *
 from mock import mock_open, patch, MagicMock, Mock
 
 try:
@@ -9,6 +9,8 @@ except ImportError:
     sys.path.append(os.path.dirname(__file__))
     from tv_series_name_expander import TVSeriesFileEnchancer, EpisodeData, files_extension
 
+
+test_directory = "test_directory"
 episode_txt_content ='1\t"Scarlet Ribbons"\n'\
                      '2\t"Little Red Book"\n'\
                      '3\t"Pretty Red Balloon"\n'\
@@ -33,8 +35,6 @@ episode_txt_content ='1\t"Scarlet Ribbons"\n'\
                      '22\t"So Long, and Thanks for All the Red Snapper"\n'\
                      '23\t"Red Rover, Red Rover"\n'\
                      '24\t"The Crimson Hat"\n'
-
-test_directory = "test_directory"
 test_files_list = [
     '04x01_lektor.avi',
     '04x02_lektor.avi',
@@ -82,7 +82,7 @@ def create_sutfiles(folder_path):
         open(ofile, 'a').close()
 
 
-class TVSeriesFileEnchancerTest(unittest.TestCase):
+class TestTVSeriesFileEnchancer():
     test_class = None
 
     def setUp(self):
@@ -95,34 +95,42 @@ class TVSeriesFileEnchancerTest(unittest.TestCase):
 
     ################################################################################
     def test_get_files_list(self):
+        # GIVEN / WHEN
         self.test_class.gather_files_list([test_directory])
-        self.assertEqual(len(self.test_class.episodes_list), 24)
-        self.assertEqual(self.test_class.episodes_list[0].file_name, 'S04E01_lektor')
-        self.assertEqual(self.test_class.episodes_list[1].file_name, 'S04E02_lektor')
-        self.assertEqual(self.test_class.episodes_list[23].file_name, 'S04E24_lektor')
+        # THEN
+        eq_(len(self.test_class.episodes_list), 24)
+        eq_(self.test_class.episodes_list[0].file_name, 'S04E01_lektor')
+        eq_(self.test_class.episodes_list[1].file_name, 'S04E02_lektor')
+        eq_(self.test_class.episodes_list[23].file_name, 'S04E24_lektor')
 
     ################################################################################
     def test_load_episodes_names_file(self):
+        # GIVEN
         m = mock_open(read_data=episode_txt_content)
         m.return_value.__iter__ = lambda self: iter(self.readline, '')
         with patch('tv_series_name_expander.open', m, create=True):
+            # WHEN
             self.test_class.load_episode_names(test_directory)
-            self.assertEqual(len(self.test_class.episodes_names), 24)
-            self.assertEqual(self.test_class.episodes_names[1], 'Scarlet Ribbons')
-            self.assertEqual(self.test_class.episodes_names[2], 'Little Red Book')
-            self.assertEqual(self.test_class.episodes_names[3], 'Pretty Red Balloon')
+            # THEN
+            eq_(len(self.test_class.episodes_names), 24)
+            eq_(self.test_class.episodes_names[1], 'Scarlet Ribbons')
+            eq_(self.test_class.episodes_names[2], 'Little Red Book')
+            eq_(self.test_class.episodes_names[3], 'Pretty Red Balloon')
 
     ################################################################################
     def test_enrich_episodes_1(self):
+        # GIVEN
         m = mock_open(read_data=episode_txt_content)
         m.return_value.__iter__ = lambda self: iter(self.readline, '')
         with patch('tv_series_name_expander.open', m, create=True):
+            # WHEN
             self.test_class.process([test_directory])
+            # THEN
             m.assert_called_once_with(os.path.join(test_directory,"episodes.txt"), "r")
             # self.assertEqual(m.return_values.__iter__.call_count, 2)
             abs_test_dir = os.path.join(os.getcwd(), test_directory)
-            self.assertTrue(os.path.exists(os.path.join(abs_test_dir, "S04E01.Scarlet Ribbons_lektor.avi")))
-            self.assertTrue(os.path.exists(os.path.join(abs_test_dir, "S04E02.Little Red Book_lektor.avi")))
-            self.assertTrue(os.path.exists(os.path.join(abs_test_dir, "S04E03.Pretty Red Balloon_lektor.avi")))
-            self.assertTrue(os.path.exists(os.path.join(abs_test_dir, "S04E04.Ring Around the Rosie_lektor.avi")))
-            self.assertTrue(os.path.exists(os.path.join(abs_test_dir, "S04E05.Blood and Sand_lektor.avi")))
+            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E01.Scarlet Ribbons_lektor.avi")))
+            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E02.Little Red Book_lektor.avi")))
+            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E03.Pretty Red Balloon_lektor.avi")))
+            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E04.Ring Around the Rosie_lektor.avi")))
+            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E05.Blood and Sand_lektor.avi")))

@@ -1,8 +1,9 @@
+#!/usr/bin/python2
 from optparse import OptionParser
 import os, re, sys
 from string import maketrans
 
-files_extension = [".avi", ".mp4"]
+files_extension = [".avi", ".mp4", ".mkv"]
 dest_episodes_file_name = "episodes.txt"
 
 season_re_pattern = '[Ss]?\d{1,2}'
@@ -79,6 +80,7 @@ class EpisodeData:
         return file_name
 
     def rename_file(self, episode_name):
+        episode_name = episode_name.replace(' ','.')
         name = self.add_episode_name(self.file_name, episode_name)
         new_file_path = os.path.join(self.file_directory,name + self.file_ext)
         os.rename(self.initial_path, new_file_path)
@@ -95,6 +97,9 @@ class TVSeriesFileEnchancer:
 
     def process(self, input_file):
         #
+        if not isinstance(input_file, list):
+        # if not isinstance(list, input_file):
+            raise AttributeError("As input use list")
         self.gather_files_list(input_file)
         self.load_episode_names(input_file[0])
         self.__rename_files()
@@ -167,7 +172,7 @@ if __name__ == "__main__":
     test_required_python()
     clear_console()
     (options, args) = parse_parameters()
-    if args.filename is None:
-        args.filename = [os.getcwd()]
+    if options.filename is None:
+        options.filename = [os.getcwd()]
     test_class = TVSeriesFileEnchancer()
-    test_class.process(args.filename)
+    test_class.process(options.filename)
