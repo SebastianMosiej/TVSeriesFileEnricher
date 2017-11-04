@@ -20,7 +20,7 @@ class TestEpisodeData():
         test = EpisodeData("")
         file_name = "[AC] Psycho-Pass - 01 [Blu-Ray][720p][Dual Audio][Lucifer22].mkv"
         # WHEN
-        result = test.normalize_episode_name(file_name)
+        result = test.normalize_episode_filename(file_name)
         # THEN
         eq_(result, "[AC] Psycho-Pass - 01 [Blu-Ray][720p][Dual Audio][Lucifer22].mkv")
 
@@ -29,7 +29,7 @@ class TestEpisodeData():
         test = EpisodeData("")
         file_name = "[V-A]_hack_SIGN_-_01_[BB601406].mkv"
         # WHEN
-        result = test.normalize_episode_name(file_name)
+        result = test.normalize_episode_filename(file_name)
         # THEN
         eq_(result, "[V-A]_hack_SIGN_-_01_[BB601406].mkv")
 
@@ -38,7 +38,7 @@ class TestEpisodeData():
         file_name = '04x09_lektor.avi'
         episode_data = EpisodeData(file_name)
         # WHEN
-        result = episode_data.normalize_episode_name(file_name)
+        result = episode_data.normalize_episode_filename(file_name)
         # THEN
         eq_(result, 'S04E09_lektor.avi')
 
@@ -47,7 +47,7 @@ class TestEpisodeData():
         file_name = 'Luther.S01E01.PL.WEB-DL.XviD-DeiX.avi'
         episode_data = EpisodeData(file_name)
         # WHEN
-        result = episode_data.normalize_episode_name(file_name)
+        result = episode_data.normalize_episode_filename(file_name)
         # THEN
         eq_(result, 'Luther.S01E01.PL.WEB-DL.XviD-DeiX.avi')
 
@@ -56,7 +56,7 @@ class TestEpisodeData():
         file_name = 'Luther.S03E03-04.PL.HDTV.XviD.avi'
         episode_data = EpisodeData(file_name)
         # WHEN
-        result = episode_data.normalize_episode_name(file_name)
+        result = episode_data.normalize_episode_filename(file_name)
         # THEN
         eq_(result, 'Luther.S03E03E04.PL.HDTV.XviD.avi')
 
@@ -65,7 +65,7 @@ class TestEpisodeData():
         file_name = 'Mentalista.DVBRiP.PL.S01E01.avi'
         episode_data = EpisodeData(file_name)
         # WHEN
-        result = episode_data.normalize_episode_name(file_name)
+        result = episode_data.normalize_episode_filename(file_name)
         # THEN
         eq_(result, 'Mentalista.DVBRiP.PL.S01E01.avi')
 
@@ -74,7 +74,7 @@ class TestEpisodeData():
         file_name = 'Luther.s01e01.PL.WEB-DL.XviD-DeiX.avi'
         episode_data = EpisodeData(file_name)
         # WHEN
-        result = episode_data.normalize_episode_name(file_name)
+        result = episode_data.normalize_episode_filename(file_name)
         # THEN
         eq_(result, 'Luther.S01E01.PL.WEB-DL.XviD-DeiX.avi')
 
@@ -139,3 +139,13 @@ class TestEpisodeData():
         eq_(episode_data.episode_start_nr, 3)
         eq_(episode_data.episode_end_nr, 4)
 
+    def test_episode_data_process_file_name_4(self):
+        # GIVEN
+        file_name = 'Shaman King ep.01.mkv'
+        episode_data = EpisodeData(file_name)
+        # WHEN
+        episode_data.process()
+        # THEN
+        eq_(episode_data.season, None)
+        eq_(episode_data.episode_start_nr, 1)
+        eq_(episode_data.episode_end_nr, 1)

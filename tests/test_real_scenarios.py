@@ -61,7 +61,6 @@ class TestDirkGentlys():
             ofile = os.path.join(folder_path, file_name)
             open(ofile, 'a').close()
 
-
     def setUp(self):
         TestDirkGentlys.clean_folder_content(test_directory)
         TestDirkGentlys.create_sutfiles(test_directory, self.test_files_list)
@@ -84,5 +83,3 @@ class TestDirkGentlys():
             ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[5])))
             ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[6])))
             ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[7])))
-
-

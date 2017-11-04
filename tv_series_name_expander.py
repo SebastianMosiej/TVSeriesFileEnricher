@@ -8,7 +8,7 @@ dest_episodes_file_name = "episodes.txt"
 
 season_re_pattern = '[Ss]?\d{1,2}'
 episode_re_pattern = '([-xEe]?\d{1,2}){1,2}'
-episodeid_re_pattern = season_re_pattern + episode_re_pattern
+season_episode_re_pattern = season_re_pattern + episode_re_pattern
 
 """ class with data about single file """
 
@@ -16,7 +16,7 @@ episodeid_re_pattern = season_re_pattern + episode_re_pattern
 class EpisodeData:
     episode_nr_regexp = re.compile(episode_re_pattern)
     season_nr_regexp = re.compile(season_re_pattern)
-    episodeid_regexp = re.compile(episodeid_re_pattern)
+    season_episode_regexp = re.compile(season_episode_re_pattern)
     initial_path = ""
 
     """The constructor. """
@@ -37,20 +37,27 @@ class EpisodeData:
 
     def process(self):
         self.process_file_path_parts(self.initial_path)
-        self.file_name = self.normalize_episode_name(self.original_file_name)
-        self.process_file_name()
+        self.file_name = self.normalize_episode_filename(self.original_file_name)
+        self.extract_season_episode_number()
 
     def process_file_path_parts(self, file_path):
         self.file_directory = os.path.dirname(file_path)
         file_name = os.path.basename(file_path)
         self.original_file_name, self.file_ext = os.path.splitext(file_name)
 
-    def process_file_name(self):
-        episodeid_name = self.episodeid_regexp.search(self.file_name).group()
-        result = self.season_nr_regexp.search(episodeid_name)
-        self.season = int(result.group().translate(None, 'Ss'))
+    def extract_season_episode_number(self):
+        season_episode_result = self.season_episode_regexp.search(self.file_name).group()
 
-        episode_id = self.episode_nr_regexp.search(episodeid_name, result.end()).group()
+        season_result = self.season_nr_regexp.search(season_episode_result)
+        self.season = int(season_result.group().translate(None, 'Ss'))
+
+        episode_result = self.episode_nr_regexp.search(season_episode_result, season_result.end())
+        if episode_result is None:
+            episode_id = str(self.season)
+            self.season = None
+            # it means - season is episode
+        else:
+            episode_id = episode_result.group()
         while len(episode_id):
             result = re.compile('[-xEe]?\d{1,2}').search(episode_id)
             if self.episode_start_nr == 0:
@@ -59,8 +66,8 @@ class EpisodeData:
             if len(episode_id) == 0:
                 self.episode_end_nr = int(result.group().translate(None, 'Ee'))
 
-    def normalize_episode_name(self, file_name):
-        episodeid_result = self.episodeid_regexp.search(file_name)
+    def normalize_episode_filename(self, file_name):
+        episodeid_result = self.season_episode_regexp.search(file_name)
         trans = maketrans("x-es","EEES")
         name = episodeid_result.group().translate(trans)
         # name = name.replace('s', 'S')
@@ -75,7 +82,7 @@ class EpisodeData:
         try:
             file_name.index(episode_name)
         except ValueError:
-            episodeid_result = self.episodeid_regexp.search(file_name)
+            episodeid_result = self.season_episode_regexp.search(file_name)
             file_name = file_name[0:episodeid_result.end()] + '.' + episode_name + file_name[episodeid_result.end():]
         return file_name
 
