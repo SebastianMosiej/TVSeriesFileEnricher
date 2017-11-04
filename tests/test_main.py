@@ -1,6 +1,7 @@
-import os
+import os.path
+from os import listdir, getcwd
 from nose.tools import *
-from mock import mock_open, patch, MagicMock, Mock
+from mock import mock_open, patch, MagicMock, Mock, call
 
 try:
     from tv_series_name_expander import TVSeriesFileEnchancer, EpisodeData, files_extension
@@ -118,7 +119,10 @@ class TestTVSeriesFileEnchancer():
             eq_(self.test_class.episodes_names[3], 'Pretty Red Balloon')
 
     ################################################################################
-    def test_enrich_episodes_1(self):
+    @patch('tv_series_name_expander.os.path.isdir', return_value=True)
+    @patch("tv_series_name_expander.os.listdir", return_value=test_files_list)
+    @patch("tv_series_name_expander.os.rename")
+    def test_enrich_episodes_1(self, RenameFileMock, ListDirMock, IsDirMock):
         # GIVEN
         m = mock_open(read_data=episode_txt_content)
         m.return_value.__iter__ = lambda self: iter(self.readline, '')
@@ -127,10 +131,15 @@ class TestTVSeriesFileEnchancer():
             self.test_class.process([test_directory])
             # THEN
             m.assert_called_once_with(os.path.join(test_directory,"episodes.txt"), "r")
-            # self.assertEqual(m.return_values.__iter__.call_count, 2)
+            isDirMockCalls = IsDirMock.mock_calls
+
+            eq_(isDirMockCalls[0], call(os.path.join(os.getcwd(),test_directory)))
+            eq_(isDirMockCalls[1], call(test_directory))
+
             abs_test_dir = os.path.join(os.getcwd(), test_directory)
-            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E01.Scarlet.Ribbons_lektor.avi")))
-            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E02.Little.Red.Book_lektor.avi")))
-            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E03.Pretty.Red.Balloon_lektor.avi")))
-            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E04.Ring.Around.the.Rosie_lektor.avi")))
-            ok_(os.path.exists(os.path.join(abs_test_dir, "S04E05.Blood.and.Sand_lektor.avi")))
+            renameFilesCalls = RenameFileMock.mock_calls
+            eq_(renameFilesCalls[0], call(os.path.join(abs_test_dir, '04x01_lektor.avi'), os.path.join(abs_test_dir, "S04E01.Scarlet.Ribbons_lektor.avi")))
+            eq_(renameFilesCalls[1], call(os.path.join(abs_test_dir, '04x02_lektor.avi'), os.path.join(abs_test_dir, "S04E02.Little.Red.Book_lektor.avi")))
+            eq_(renameFilesCalls[2], call(os.path.join(abs_test_dir, '04x03_lektor.avi'), os.path.join(abs_test_dir, "S04E03.Pretty.Red.Balloon_lektor.avi")))
+            eq_(renameFilesCalls[23], call(os.path.join(abs_test_dir, '04x24_lektor.avi'), os.path.join(abs_test_dir, "S04E24.The.Crimson.Hat_lektor.avi")))
+
