@@ -1,6 +1,7 @@
-import os
+import os.path
+from os.path import join as join
 from nose.tools import *
-from mock import mock_open, patch, MagicMock, Mock
+from mock import mock_open, patch, call
 
 try:
     from tv_series_name_expander import TVSeriesFileEnchancer, EpisodeData, files_extension
@@ -41,31 +42,10 @@ class TestDirkGentlys():
                      'S01E07.Weaponized.Soul.1080p.BluRay.x264-SHORTBREHD.mkv',
                      'S01E08.Two.Sane.Guys.Doing.Normal.Things.1080p.BluRay.x264-SHORTBREHD.mkv']
 
-    @staticmethod
-    def clean_folder_content(folder_path):
-        if not os.path.exists(folder_path):
-            return
-        listedDir = os.listdir(folder_path)
-        for file_name in listedDir:
-            name, file_ext = os.path.splitext(file_name)
-            if file_ext in files_extension:
-                ofile = os.path.join(folder_path, file_name)
-                os.remove(ofile)
-
-    @staticmethod
-    def create_sutfiles(folder_path, files_list):
-        if not os.path.exists(folder_path):
-            os.mkdir(folder_path)
-            return
-        for file_name in files_list:
-            ofile = os.path.join(folder_path, file_name)
-            open(ofile, 'a').close()
-
-    def setUp(self):
-        TestDirkGentlys.clean_folder_content(test_directory)
-        TestDirkGentlys.create_sutfiles(test_directory, self.test_files_list)
-
-    def test_add_episodes_names(self):
+    @patch('tv_series_name_expander.os.path.isdir', return_value=True)
+    @patch("tv_series_name_expander.os.listdir", return_value=test_files_list)
+    @patch("tv_series_name_expander.os.rename")
+    def test_add_episodes_names(self, rename_file_mock, list_dir_mock, is_dir_mock):
         # GIVEN
         m = mock_open(read_data=self.episode_txt_content)
         m.return_value.__iter__ = lambda self: iter(self.readline, '')
@@ -75,11 +55,19 @@ class TestDirkGentlys():
             sut.process([test_directory])
             # THEN
             m.assert_called_once_with(os.path.join(test_directory,"episodes.txt"), "r")
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[0])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[1])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[2])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[3])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[4])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[5])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[6])))
-            ok_(os.path.exists(os.path.join(test_directory, self.result_files_list[7])))
+
+            is_dir_mock_calls = is_dir_mock.mock_calls
+            eq_(is_dir_mock_calls[0], call(os.path.join(os.getcwd(),test_directory)))
+            eq_(is_dir_mock_calls[1], call(test_directory))
+
+            abs_test_dir = os.path.join(os.getcwd(), test_directory)
+            rename_files_calls = rename_file_mock.mock_calls
+            eq_(len(rename_files_calls), 8)
+            eq_(rename_files_calls[0], call(join(abs_test_dir, self.test_files_list[1]), join(abs_test_dir, self.result_files_list[1])))
+            eq_(rename_files_calls[1], call(join(abs_test_dir, self.test_files_list[2]), join(abs_test_dir, self.result_files_list[2])))
+            eq_(rename_files_calls[2], call(join(abs_test_dir, self.test_files_list[3]), join(abs_test_dir, self.result_files_list[3])))
+            eq_(rename_files_calls[3], call(join(abs_test_dir, self.test_files_list[4]), join(abs_test_dir, self.result_files_list[4])))
+            eq_(rename_files_calls[4], call(join(abs_test_dir, self.test_files_list[5]), join(abs_test_dir, self.result_files_list[5])))
+            eq_(rename_files_calls[5], call(join(abs_test_dir, self.test_files_list[6]), join(abs_test_dir, self.result_files_list[6])))
+            eq_(rename_files_calls[6], call(join(abs_test_dir, self.test_files_list[7]), join(abs_test_dir, self.result_files_list[7])))
+            eq_(rename_files_calls[7], call(join(abs_test_dir, self.test_files_list[8]), join(abs_test_dir, self.result_files_list[8])))
