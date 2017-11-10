@@ -117,7 +117,9 @@ class TVSeriesFileEnchancer:
 
     def process_line(self, line):
         split_result = line.split('"')
-        return (int(split_result[0].strip()), split_result[1])
+        (episode_nr, episode_name) = (int(split_result[0].strip()), split_result[1])
+        episode_name = episode_name.replace("/", "-")
+        return episode_nr, episode_name
 
     def load_episode_names(self, input_file=""):
         if input_file == "":
