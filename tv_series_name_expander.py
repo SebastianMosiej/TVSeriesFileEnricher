@@ -1,7 +1,7 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 from optparse import OptionParser
 import os, re, sys
-from string import maketrans
+import string
 
 files_extension = [".avi", ".mp4", ".mkv"]
 dest_episodes_file_name = "episodes.txt"
@@ -49,7 +49,8 @@ class EpisodeData:
         season_episode_result = self.season_episode_regexp.search(self.file_name).group()
 
         season_result = self.season_nr_regexp.search(season_episode_result)
-        self.season = int(season_result.group().translate(None, 'Ss'))
+        trans = str.maketrans("", "", "sS")
+        self.season = int(season_result.group().translate(trans))
 
         episode_result = self.episode_nr_regexp.search(season_episode_result, season_result.end())
         if episode_result is None:
@@ -61,14 +62,16 @@ class EpisodeData:
         while len(episode_id):
             result = re.compile('[-xEe]?\d{1,2}').search(episode_id)
             if self.episode_start_nr == 0:
-                self.episode_start_nr = int(result.group().translate(None, 'Ee'))
+                trans = str.maketrans("", "", "Ee")
+                self.episode_start_nr = int(result.group().translate(trans))
             episode_id = episode_id.replace(result.group(), '')
             if len(episode_id) == 0:
-                self.episode_end_nr = int(result.group().translate(None, 'Ee'))
+                trans = str.maketrans("", "", "Ee")
+                self.episode_end_nr = int(result.group().translate(trans))
 
     def normalize_episode_filename(self, file_name):
         episodeid_result = self.season_episode_regexp.search(file_name)
-        trans = maketrans("x-es","EEES")
+        trans = str.maketrans("x-es","EEES")
         name = episodeid_result.group().translate(trans)
         # name = name.replace('s', 'S')
         index = name.find('S')
@@ -103,9 +106,7 @@ class TVSeriesFileEnchancer:
         self.episodes_list = []
 
     def process(self, input_file):
-        #
         if not isinstance(input_file, list):
-        # if not isinstance(list, input_file):
             raise AttributeError("As input use list")
         self.gather_files_list(input_file)
         self.load_episode_names(input_file[0])
@@ -115,17 +116,18 @@ class TVSeriesFileEnchancer:
         for episode in self.episodes_list:
             episode.rename_file(self.episodes_names[episode.episode_start_nr])
 
-    def process_line(self, line):
+    @staticmethod
+    def process_line(line):
         split_result = line.split('"')
-        (episode_nr, episode_name) = (int(split_result[0].strip()), split_result[1])
-        episode_name = episode_name.replace("/", "-")
+        episode_nr = int(split_result[0].strip())
+        episode_name = split_result[1].replace("/", "-")
         return episode_nr, episode_name
 
     def load_episode_names(self, input_file=""):
         if input_file == "":
             input_file = dest_episodes_file_name
         if os.path.isdir(input_file):
-            input_file = input_file + "/episodes.txt"
+            input_file = os.path.join(input_file, dest_episodes_file_name)
         with open(input_file, "r") as fh:
             for line in fh:
                 line = line.strip()
@@ -169,8 +171,8 @@ def parse_parameters(args = None):
 
 
 def test_required_python():
-    if sys.version_info.major != 2:
-        raise SystemError("Use Python2")
+    if sys.version_info.major != 3:
+        raise SystemError("Use Python3")
 
 
 def clear_console():
